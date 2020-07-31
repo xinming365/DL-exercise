@@ -19,10 +19,12 @@ class SegDetector(nn.Module):
         super(SegDetector, self).__init__()
         self.k = k
         self.serial = serial
+        # 上采样， 输入的数据形式为 minibatch * channels * [optional depth] * [optional height] * width
         self.up5 = nn.Upsample(scale_factor=2, mode='nearest')
         self.up4 = nn.Upsample(scale_factor=2, mode='nearest')
         self.up3 = nn.Upsample(scale_factor=2, mode='nearest')
-
+        # (N, Cin, H, W) 参数：in_channels, out_channels, kernel_size, stride, padding, dilation, groups,
+        # bias=True, padding_mode='zeros'
         self.in5 = nn.Conv2d(in_channels[-1], inner_channels, 1, bias=bias)
         self.in4 = nn.Conv2d(in_channels[-2], inner_channels, 1, bias=bias)
         self.in3 = nn.Conv2d(in_channels[-3], inner_channels, 1, bias=bias)
@@ -134,10 +136,15 @@ class SegDetector(nn.Module):
         # this is the pred module, not binarization module; 
         # We do not correct the name due to the trained model.
         binary = self.binarize(fuse)
+
+        # 训练过程使用self.binarize，最后为sigmoid输出。
         if self.training:
             result = OrderedDict(binary=binary)
         else:
             return binary
+
+        # 训练且使用threshould map
+        # interpolate(input, size, scale_factor, mode='nearest',...)
         if self.adaptive and self.training:
             if self.serial:
                 fuse = torch.cat(
@@ -145,6 +152,7 @@ class SegDetector(nn.Module):
                             binary, fuse.shape[2:])), 1)
             thresh = self.thresh(fuse)
             thresh_binary = self.step_function(binary, thresh)
+            # update()dict.update(dict2), 字典(Dictionary) update() 函数把字典dict2的键/值对更新到dict里。
             result.update(thresh=thresh, thresh_binary=thresh_binary)
         return result
 

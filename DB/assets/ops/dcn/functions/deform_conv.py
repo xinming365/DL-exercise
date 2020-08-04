@@ -7,6 +7,7 @@ from .. import deform_conv_cuda
 
 class DeformConvFunction(Function):
 
+    # 静态方法，静态方法不需要实例化
     @staticmethod
     def forward(ctx,
                 input,

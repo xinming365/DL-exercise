@@ -104,6 +104,9 @@ class Trainer:
             iter_delta = 0
 
     def train_step(self, model, optimizer, batch, epoch, step, **kwards):
+        # backward propagation
+        # Observe how gradient buffers had to be manually set to zero using optimizer.zero_grad().
+        # This is because gradients are accumulated as explained in the Backprop section.
         optimizer.zero_grad()
 
         results = model.forward(batch, training=True)
@@ -123,6 +126,7 @@ class Trainer:
             loss = l.mean()
         loss.backward()
         optimizer.step()
+        # dose the update
 
         if step % self.experiment.logger.log_interval == 0:
             if isinstance(l, dict):

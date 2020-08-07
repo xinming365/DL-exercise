@@ -22,6 +22,8 @@ class PennFudanDataset(object):
         self.transforms = transforms
         # load all image files, sorting them to
         # ensure that they are aligned
+
+        # Return a list containing the names of the files in the directory.
         self.imgs = list(sorted(os.listdir(os.path.join(root, "PNGImages"))))
         self.masks = list(sorted(os.listdir(os.path.join(root, "PedMasks"))))
 
@@ -49,6 +51,9 @@ class PennFudanDataset(object):
         num_objs = len(obj_ids)
         boxes = []
         for i in range(num_objs):
+            # np.where()，只输出非0（True)元素的坐标。坐标以tuple形式给出，
+            # 原数组有多少维，输出的tuple中就包含几个数组，分别对应符合条件元素的各维坐标。
+            # boxes 来自于 masks
             pos = np.where(masks[i])
             xmin = np.min(pos[1])
             xmax = np.max(pos[1])
@@ -56,6 +61,7 @@ class PennFudanDataset(object):
             ymax = np.max(pos[0])
             boxes.append([xmin, ymin, xmax, ymax])
         # convert everything into a torch.Tensor
+        # boxes 的shape为：(7,4)
         boxes = torch.as_tensor(boxes, dtype=torch.float32)
         # there is only one class
         labels = torch.ones((num_objs,), dtype=torch.int64)
@@ -107,6 +113,7 @@ def get_transform(train):
     transforms = []
     transforms.append(T.ToTensor())
     if train:
+    # 以概率p=0.5水平反转图片。
         transforms.append(T.RandomHorizontalFlip(0.5))
     return T.Compose(transforms)
 
@@ -118,6 +125,7 @@ def main():
     # our dataset has two classes only - background and person
     num_classes = 2
     # use our dataset and defined transformations
+
     root_dir='../dataset/PennFudanPed'
     dataset = PennFudanDataset(root_dir, get_transform(train=True))
     dataset_test = PennFudanDataset(root_dir, get_transform(train=False))

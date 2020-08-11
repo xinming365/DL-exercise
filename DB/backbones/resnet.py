@@ -17,7 +17,10 @@ model_urls = {
 
 
 def constant_init(module, constant, bias=0):
+    # fille the input Tensor with values.
+    # nn.init.normal_,ones_,zeros_,eye_...
     nn.init.constant_(module.weight, constant)
+    # This is done by calling getattr(obj, name) and catching AttributeError.
     if hasattr(module, 'bias'):
         nn.init.constant_(module.bias, bias)
 
